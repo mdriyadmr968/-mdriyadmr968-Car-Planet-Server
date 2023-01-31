@@ -1,36 +1,34 @@
 const express = require("express");
+const app = express();
 const cors = require("cors");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
-const mg = require("nodemailer-mailgun-transport");
 require("dotenv").config();
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
+const ObjectId = require("mongodb").ObjectId;
+const { MongoClient } = require("mongodb");
 const port = process.env.PORT || 5000;
 
-const app = express();
-
-// middleware
 app.use(cors());
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5rfsc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverApi: ServerApiVersion.v1,
 });
+console.log(uri);
 
 async function run() {
   try {
-    const carsCollection = client.db("carsDB").collection("cars");
-    const purchasedCarsCollection = client
-      .db("carsDB")
-      .collection("purchasedCars");
-    const reviewsCollection = client.db("carsDB").collection("reviews");
-    const usersCollection = client.db("carsDB").collection("users");
+    await client.connect();
+    const database = client.db("carsDB");
 
+    const carsCollection = database.collection("cars");
+
+    const purchasedCarsCollection = database.collection("purchasedCars");
+
+    const reviewsCollection = database.collection("reviews");
+
+    const usersCollection = database.collection("users");
     console.log("connected");
     // Get all cars data from database
     app.get("/allCars", async (req, res) => {
@@ -192,13 +190,20 @@ async function run() {
 
       res.json(carsResult);
     });
+
+    // Manage Product where get all the data
   } finally {
+    // await client.close();
   }
 }
-run().catch(console.log);
 
-app.get("/", async (req, res) => {
-  res.send("Dream World server is running");
+run().catch(console.dir);
+app.get("/", (req, res) => {
+  res.send("Hello car!");
 });
 
-app.listen(port, () => console.log(`Dream World running on ${port}`));
+// app.listen(port, () => {
+//   console.log(`listening at ${port}`);
+// });
+app.listen(process.env.PORT || port);
+//done
